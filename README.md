@@ -13,16 +13,16 @@ npm test
 npm run dev
 ```
 
-O servidor usa a porta 3000; `PORT` permite trocar a porta. A interface apresenta filmes, filtros por título/gênero, sessões, preços e assentos disponíveis. Não exige variáveis secretas ou serviços externos. Modifique o JSON para atualizar o catálogo e reinicie o servidor.
+O servidor usa a porta 3000; `PORT` permite trocar a porta. A interface apresenta filmes, filtros combináveis por título, gênero, ator/atriz e ano de lançamento, sessões, preços e assentos disponíveis. Não exige variáveis secretas ou serviços externos. Modifique o JSON para atualizar o catálogo e reinicie o servidor.
 
 ## API e MCP
 
-- `GET /api/movies?query=orbita&genre=ficcao`: catálogo filtrado, busca sem distinção de acentos/maiúsculas.
+- `GET /api/movies?query=orbita&genre=ficcao&actor=caio&year=2026`: catálogo filtrado, busca sem distinção de acentos/maiúsculas.
 - `GET /api/sessions?movieId=orbita&date=2026-10-24`: sessões e assentos disponíveis.
 - `GET /api/manifest`: identificação e capacidades para o Core.
 - `/api/mcp`: MCP Streamable HTTP, sem autenticação, usando o SDK oficial; cada requisição é independente.
 
-Ferramentas MCP: `search_movies({ query?: string, genre?: string })` retorna `{ movies: [...] }`; `get_sessions({ movieId?: string, date?: string })` retorna `{ sessions: [...] }`. Ambas retornam conteúdo JSON e `structuredContent`. Nenhuma ferramenta altera dados.
+Ferramentas MCP: `search_movies({ query?: string, genre?: string, actor?: string, year?: number })` retorna `{ movies: [...] }`; `get_sessions({ movieId?: string, date?: string })` retorna `{ sessions: [...] }`. Ambas retornam conteúdo JSON e `structuredContent`. Nenhuma ferramenta altera dados.
 
 Para o Core Orchestrator, registre o manifesto e configure o cliente MCP Streamable HTTP com a URL pública terminada em `/api/mcp`. O protocolo trata inicialização e descoberta via `tools/list`; o teste de integração fornece um exemplo com o cliente oficial. A conexão com o Core real depende de sua URL e configuração e ainda não foi validada.
 

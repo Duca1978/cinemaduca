@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
-interface Movie { id: string; title: string; genre: string; synopsis: string; durationMinutes: number; ageRating: number; director: string; cast: string[] }
+interface Movie { id: string; title: string; genre: string; year: number; synopsis: string; durationMinutes: number; ageRating: number; director: string; cast: string[] }
 interface Room { id: string; name: string; capacity: number; rows: string[]; seatsPerRow: number }
 interface Session { id: string; movieId: string; roomId: string; date: string; time: string; priceBRL: number; occupiedSeats: string[] }
 const data = JSON.parse(readFileSync(new URL('../data/cinema.json', import.meta.url), 'utf8')) as { movies: Movie[]; rooms: Room[]; sessions: Session[] };
 const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-export function searchMovies(query = '', genre = '') {
-  return data.movies.filter(m => normalize(m.title).includes(normalize(query)) && normalize(m.genre).includes(normalize(genre)));
+export function searchMovies(query = '', genre = '', actor = '', year?: number) {
+  return data.movies.filter(m => normalize(m.title).includes(normalize(query)) && normalize(m.genre).includes(normalize(genre)) && (!actor.trim() || m.cast.some(name => normalize(name).includes(normalize(actor.trim())))) && (year === undefined || m.year === year));
 }
 export function getSessions(movieId?: string, date?: string) {
   return data.sessions.filter(s => (!movieId || s.movieId === movieId) && (!date || s.date === date)).map(s => {
