@@ -49,6 +49,10 @@ test('HTTP e cliente MCP: inicialização, descoberta e execução das ferrament
     const {tools}=await client.listTools();assert.deepEqual(tools.map(t=>t.name).sort(),['cancel_reservation','create_reservation','get_movie','get_seat_availability','get_sessions','search_movies']);
     const detail = await client.callTool({name:'get_movie',arguments:{movieId:'orbita'}});
     assert.equal((detail.structuredContent as {movie:{id:string}}).movie.id, 'orbita');
+    const protagonist = (detail.structuredContent as {movie:{protagonist:{imageUrl:string;fictional:boolean}}}).movie.protagonist;
+    assert.equal(protagonist.fictional, true);
+    const portrait = await fetch(base+protagonist.imageUrl);assert.equal(portrait.status,200);assert.equal(portrait.headers.get('content-type'),'image/png');
+    const bytes = new Uint8Array(await portrait.arrayBuffer());assert.deepEqual(Array.from(bytes.slice(0,8)),[137,80,78,71,13,10,26,10]);
     const missing = await client.callTool({name:'get_movie',arguments:{movieId:'unknown'}}); assert.equal(missing.isError,true);
     const created = await client.callTool({name:'create_reservation',arguments:{sessionId:'sessao-1',seats:['B1','B2']}});
     assert.ok(!created.isError);

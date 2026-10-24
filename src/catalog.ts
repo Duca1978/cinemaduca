@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-interface Movie { id: string; title: string; genre: string; year: number; synopsis: string; durationMinutes: number; ageRating: number; director: string; cast: string[] }
+interface Movie { id: string; title: string; genre: string; year: number; synopsis: string; durationMinutes: number; ageRating: number; director: string; cast: string[]; protagonist: { name: string; imageUrl: string; imageAlt: string; fictional: boolean; generatedByAI: boolean } }
 interface Room { id: string; name: string; capacity: number; rows: string[]; seatsPerRow: number }
 interface Session { id: string; movieId: string; roomId: string; date: string; time: string; priceBRL: number; occupiedSeats: string[] }
 const data = JSON.parse(readFileSync(new URL('../data/cinema.json', import.meta.url), 'utf8')) as { movies: Movie[]; rooms: Room[]; sessions: Session[] };

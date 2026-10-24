@@ -13,7 +13,9 @@ npm test
 npm run dev
 ```
 
-O servidor usa a porta 3000; `PORT` permite trocar a porta. A interface apresenta filmes, filtros combináveis por título, gênero, ator/atriz e ano de lançamento, sessões, preços e assentos disponíveis. Não exige variáveis secretas ou serviços externos. Modifique o JSON para atualizar o catálogo e reinicie o servidor.
+O servidor usa a porta 3000; `PORT` permite trocar a porta. Cada filme possui `protagonist` com nome, `imageUrl`, descrição acessível e identificação de imagem gerada por IA. Os retratos são de personagens fictícias, ficam em `public/images/` e são retornados por `search_movies` e `get_movie`. `imageUrl` é relativo à origem do servidor (na Vercel, use `https://cinemaduca.vercel.app` como base). Não há geração a cada consulta.
+
+A interface apresenta filmes, filtros combináveis por título, gênero, ator/atriz e ano de lançamento, sessões, preços e assentos disponíveis. Não exige variáveis secretas ou serviços externos. Modifique o JSON para atualizar o catálogo e reinicie o servidor.
 
 ## API e MCP
 

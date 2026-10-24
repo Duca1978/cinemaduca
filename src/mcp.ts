@@ -23,7 +23,7 @@ export async function handleMcp(req: IncomingMessage & { body?: unknown }, res: 
     return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
   });
   server.registerTool('get_movie', {
-    description: 'Consulta os detalhes de um filme pelo identificador retornado por search_movies.',
+    description: 'Consulta os detalhes de um filme e sua protagonista fictícia, incluindo imageUrl da imagem gerada por IA. Caminhos /images/ são relativos à origem do servidor MCP. Use o identificador retornado por search_movies.',
     inputSchema: {movieId: z.string().min(1)}, annotations: {readOnlyHint: true}
   }, async ({movieId}) => {
     const movie = getMovie(movieId);
