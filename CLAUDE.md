@@ -1,0 +1,11 @@
+# Cinema Duca
+- Objetivo: cinema virtual de consulta para GTA7 Lab.
+- Stack: Node 22+, TypeScript, SDK oficial MCP; interface HTML sem framework.
+- JSON: `movies` (catálogo), `rooms` (fileiras/capacidade), `sessions` (filme, sala, data, horário, preço e assentos ocupados).
+- Tools: `search_movies(query?, genre?)`, `get_sessions(movieId?, date?)`; somente leitura.
+- Arquivos: `src/catalog.ts`, `src/mcp.ts`, `src/server.ts`, `api/index.ts`, `public/index.html`, `data/cinema.json`.
+- Decisões: sem banco, autenticação ou pagamentos; datas fixas de demonstração; MCP HTTP sem sessão.
+- Validar: `npm run typecheck` e `npm test`; iniciar com `npm run dev`.
+- Status: primeira versão implementada; integração externa e deploy pendentes.
+- Próxima tarefa: publicar na Vercel e conectar o endpoint MCP ao Core real.
+- Trabalhar em etapas pequenas; não adicionar dependências sem necessidade.

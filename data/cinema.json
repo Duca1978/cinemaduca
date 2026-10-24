@@ -1,0 +1,13 @@
+{
+  "movies": [
+    {"id":"orbita","title":"Órbita de Amanhã","genre":"Ficção científica","synopsis":"Uma equipe brasileira descobre uma cidade entre as estrelas.","durationMinutes":112,"ageRating":12,"director":"Lia Santos","cast":["Ana Luz","Caio Reis"]},
+    {"id":"bairro","title":"Um Bairro em Festa","genre":"Comédia","synopsis":"Vizinhos se unem para salvar o festival da cidade.","durationMinutes":94,"ageRating":0,"director":"Rui Costa","cast":["Bia Lima","Leo Alves"]},
+    {"id":"mar","title":"Cartas do Mar","genre":"Drama","synopsis":"Uma jovem encontra cartas que revelam a história de sua família.","durationMinutes":103,"ageRating":10,"director":"Eva Melo","cast":["Clara Dias","João Sol"]}
+  ],
+  "rooms":[{"id":"sala-1","name":"Sala 1","capacity":24,"rows":["A","B","C"],"seatsPerRow":8}],
+  "sessions":[
+    {"id":"sessao-1","movieId":"orbita","roomId":"sala-1","date":"2026-10-24","time":"19:00","priceBRL":32,"occupiedSeats":["A1","A2","B4"]},
+    {"id":"sessao-2","movieId":"bairro","roomId":"sala-1","date":"2026-10-24","time":"16:00","priceBRL":24,"occupiedSeats":["C8"]},
+    {"id":"sessao-3","movieId":"mar","roomId":"sala-1","date":"2026-10-25","time":"18:00","priceBRL":28,"occupiedSeats":[]}
+  ]
+}
