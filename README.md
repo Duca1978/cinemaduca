@@ -1,6 +1,6 @@
 # Cinema Duca
 
-Entidade de entretenimento da GTA7 Lab. Primeira versão somente de consulta, com dados fictícios em `data/cinema.json` e datas fixas de demonstração. Não implementa reservas, pagamentos ou autenticação.
+Entidade de entretenimento da GTA7 Lab. Catálogo de consulta e reservas simuladas via MCP no servidor local, com dados fictícios em `data/cinema.json` e datas fixas de demonstração. Sem pagamentos ou autenticação de usuários. Na Vercel, apenas consultas; reservas em JSON ficam restritas à demonstração local.
 
 ## Executar
 
@@ -22,7 +22,26 @@ O servidor usa a porta 3000; `PORT` permite trocar a porta. A interface apresent
 - `GET /api/manifest`: identificação e capacidades para o Core.
 - `/api/mcp`: MCP Streamable HTTP, sem autenticação, usando o SDK oficial; cada requisição é independente.
 
-Ferramentas MCP: `search_movies({ query?: string, genre?: string, actor?: string, year?: number })` retorna `{ movies: [...] }`; `get_sessions({ movieId?: string, date?: string })` retorna `{ sessions: [...] }`. Ambas retornam conteúdo JSON e `structuredContent`. Nenhuma ferramenta altera dados.
+Ferramentas MCP (todas retornam JSON e `structuredContent`):
+
+| Tool | Parâmetros | Resultado |
+| --- | --- | --- |
+| `search_movies` | `query?`, `genre?`, `actor?`, `year?` | `{ movies: [...] }` |
+| `get_sessions` | `movieId?`, `date?` | `{ sessions: [...] }`, incluindo disponibilidade atual |
+| `get_movie` | `movieId` | `{ movie: {...} }` |
+| `get_seat_availability` | `sessionId` | Assentos disponíveis, reservados e ocupados; modo de reserva |
+| `create_reservation` | `sessionId`, `seats` (lista de 1 a 24 assentos) | `{ reservation: {...} }` com ID, valor e `cancellationToken` |
+| `cancel_reservation` | `reservationId`, `cancellationToken` | `{ reservation: {..., status: "cancelled"} }` |
+
+Exemplo local: chame `create_reservation({ sessionId: "sessao-1", seats: ["B1", "B2"] })`.
+A reserva custa R$ 64,00 fictícios. Guarde o `id` e o `cancellationToken` retornados para chamar `cancel_reservation`.
+O token permite cancelar aquela reserva; seu valor não é gravado no arquivo, apenas seu hash.
+
+As reservas locais são salvas em `.local/reservations.json` (ignorado pelo Git), separadas do catálogo. `CINEMA_RESERVATIONS_FILE` pode indicar outro caminho gravável. Reiniciar o servidor preserva as reservas. A gravação usa bloqueio entre processos e substituição atômica do arquivo, impedindo reservas concorrentes do mesmo assento. Não use esse arquivo em múltiplas máquinas. Um processo interrompido durante uma gravação pode deixar o diretório `.lock`; só remova esse bloqueio após confirmar que nenhum processo está gravando.
+
+Cancelar novamente a mesma reserva é seguro. Assentos ocupados, inexistentes, repetidos ou já reservados são rejeitados; uma tentativa com conflito não reserva parte dos assentos. Erros dessas tools incluem `isError: true` e código estruturado como `SEAT_UNAVAILABLE`, `SESSION_NOT_FOUND` ou `RESERVATION_NOT_FOUND`.
+
+Na Vercel (`VERCEL=1`), criar/cancelar retorna `STORAGE_NOT_CONFIGURED` sem gravar em arquivos temporários. A consulta de disponibilidade retorna o estado fictício do catálogo com `reservationMode: "disabled"`; localmente, retorna `local-json`. Esta é uma escolha da demonstração: sem banco externo, Redis ou novas credenciais. Datas passadas continuam aceitas para simulação. Não há pagamento, expiração automática ou interface de reserva; as ações são feitas via MCP.
 
 Para o Core Orchestrator, registre o manifesto e configure o cliente MCP Streamable HTTP com a URL pública terminada em `/api/mcp`. O protocolo trata inicialização e descoberta via `tools/list`; o teste de integração fornece um exemplo com o cliente oficial. A conexão com o Core real depende de sua URL e configuração e ainda não foi validada.
 
@@ -30,8 +49,8 @@ Para o Core Orchestrator, registre o manifesto e configure o cliente MCP Streama
 
 Importe o repositório na Vercel, selecione **Other** como framework e Node.js 24.x. Não há build da interface: ela está em `public/`. Deixe Build Command sem comando e configure Output Directory como `public`. `vercel.json` encaminha `/api/*` para a função TypeScript e inclui o JSON no pacote. O SDK MCP é a dependência de runtime; `tsx`, TypeScript e os tipos são ferramentas de desenvolvimento.
 
-A publicação requer uma conta/projeto Vercel. Nenhum deploy foi realizado durante a preparação. Depois do deploy, confira a página, `/api/manifest` e uma chamada MCP antes de cadastrar no Core.
+A publicação requer uma conta/projeto Vercel. Deploy do catálogo: https://cinemaduca.vercel.app. Atualizações na branch main podem gerar novo deploy automático. Depois do deploy, confira a página, `/api/manifest` e uma chamada MCP antes de cadastrar no Core.
 
 ## Verificação
 
-`npm test` testa filtros, disponibilidade, respostas HTTP e um cliente MCP real: inicialização, descoberta, execução das duas ferramentas e rejeição de data inválida. Não existe banco nem estado gravável; reinícios mantêm os mesmos dados de demonstração.
+`npm test` testa filtros, disponibilidade, respostas HTTP e um cliente MCP real: inicialização, descoberta, execução das seis ferramentas, cancelamento, disponibilidade, concorrência, persistência em JSON, erros de validação, comportamento de consulta na Vercel e rewrites. Os testes usam diretórios temporários e não alteram reservas da demonstração.

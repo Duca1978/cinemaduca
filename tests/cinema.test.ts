@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createServer } from 'node:http';
 import handler from '../api/index.js';
 import { test } from 'node:test';
@@ -26,7 +29,8 @@ test('filtra sessões e exclui assentos ocupados', () => {
   assert.equal(getSessions(undefined, '2020-01-01').length, 0);
 });
 test('HTTP e cliente MCP: inicialização, descoberta e execução das ferramentas', async () => {
-  const process = spawn('node', ['--import', 'tsx', 'src/server.ts'], { env: {...globalThis.process.env, PORT:'3101'}, stdio:'pipe' });
+  const dir = await mkdtemp(join(tmpdir(), 'cinema-mcp-'));
+  const process = spawn('node', ['--import', 'tsx', 'src/server.ts'], { env: {...globalThis.process.env, PORT:'3101', CINEMA_RESERVATIONS_FILE:join(dir,'reservations.json')}, stdio:'pipe' });
   const base = 'http://127.0.0.1:3101';
   const client = new Client({name:'cinema-test',version:'1.0.0'});
   try {
@@ -42,7 +46,22 @@ test('HTTP e cliente MCP: inicialização, descoberta e execução das ferrament
     assert.equal((await fetch(base+'/api/unknown')).status,404);
     assert.equal((await fetch(base+'/api/movies',{method:'POST'})).status,405);
     await client.connect(new StreamableHTTPClientTransport(new URL(base+'/api/mcp')));
-    const {tools}=await client.listTools();assert.deepEqual(tools.map(t=>t.name).sort(),['get_sessions','search_movies']);
+    const {tools}=await client.listTools();assert.deepEqual(tools.map(t=>t.name).sort(),['cancel_reservation','create_reservation','get_movie','get_seat_availability','get_sessions','search_movies']);
+    const detail = await client.callTool({name:'get_movie',arguments:{movieId:'orbita'}});
+    assert.equal((detail.structuredContent as {movie:{id:string}}).movie.id, 'orbita');
+    const missing = await client.callTool({name:'get_movie',arguments:{movieId:'unknown'}}); assert.equal(missing.isError,true);
+    const created = await client.callTool({name:'create_reservation',arguments:{sessionId:'sessao-1',seats:['B1','B2']}});
+    assert.ok(!created.isError);
+    const reservation = (created.structuredContent as {reservation:{id:string;cancellationToken:string;totalBRL:number}}).reservation;
+    assert.equal(reservation.totalBRL,64);
+    const availability = await client.callTool({name:'get_seat_availability',arguments:{sessionId:'sessao-1'}});
+    assert.equal((availability.structuredContent as {availableSeats:string[]}).availableSeats.length,19);
+    const httpSessions = await (await fetch(base+'/api/sessions?movieId=orbita')).json();
+    assert.equal(httpSessions.sessions[0].availableSeats.length,19);
+    const duplicate = await client.callTool({name:'create_reservation',arguments:{sessionId:'sessao-1',seats:['B1']}}); assert.equal(duplicate.isError,true);
+    const wrongToken = await client.callTool({name:'cancel_reservation',arguments:{reservationId:reservation.id,cancellationToken:'0'.repeat(48)}});assert.equal(wrongToken.isError,true);
+    const cancelled = await client.callTool({name:'cancel_reservation',arguments:{reservationId:reservation.id,cancellationToken:reservation.cancellationToken}});
+    assert.equal((cancelled.structuredContent as {reservation:{status:string}}).reservation.status,'cancelled');
     const moviesResult=await client.callTool({name:'search_movies',arguments:{query:'Órbita'}});
     assert.equal((moviesResult.structuredContent as {movies:unknown[]}).movies.length,1);
     const actorResult=await client.callTool({name:'search_movies',arguments:{actor:'João',year:2024}});
@@ -51,7 +70,7 @@ test('HTTP e cliente MCP: inicialização, descoberta e execução das ferrament
     const sessionsResult=await client.callTool({name:'get_sessions',arguments:{movieId:'orbita'}});
     assert.equal((sessionsResult.structuredContent as {sessions:{availableSeats:string[]}[]}).sessions[0].availableSeats.length,21);
     const invalid=await client.callTool({name:'get_sessions',arguments:{date:'invalid'}});assert.equal(invalid.isError,true);
-  } finally {await client.close();process.kill();}
+  } finally {await client.close();process.kill();await rm(dir,{recursive:true,force:true});}
 });
 
 test('rotas e MCP preservados após rewrite da Vercel', async () => {
@@ -74,7 +93,7 @@ test('rotas e MCP preservados após rewrite da Vercel', async () => {
     assert.equal(sessions.sessions.length, 3);
     assert.equal((await (await fetch(base+'/api/manifest')).json()).id, 'cinema-duca');
     await client.connect(new StreamableHTTPClientTransport(new URL(base+'/api/mcp')));
-    assert.equal((await client.listTools()).tools.length, 2);
+    assert.equal((await client.listTools()).tools.length, 6);
     const result = await client.callTool({name:'search_movies', arguments:{actor:'Caio'}});
     assert.equal((result.structuredContent as {movies:{id:string}[]}).movies[0].id, 'orbita');
   } finally {

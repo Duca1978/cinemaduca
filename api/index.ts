@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { searchMovies, getSessions, manifest } from '../src/catalog.js';
+import { searchMovies, manifest } from '../src/catalog.js';
+import { getSessionsWithReservations } from '../src/reservations.js';
 import { handleMcp } from '../src/mcp.js';
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
   const url = new URL(req.url ?? '/', 'http://localhost');
@@ -15,7 +16,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       res.statusCode = 400; res.end(JSON.stringify({ error: 'Ano deve conter quatro dígitos.' })); return;
     }
     const result = pathname === '/api/movies' ? { movies: searchMovies(url.searchParams.get('query') ?? '', url.searchParams.get('genre') ?? '', url.searchParams.get('actor') ?? '', year ? Number(year) : undefined) }
-      : pathname === '/api/sessions' ? { sessions: getSessions(url.searchParams.get('movieId') ?? undefined, url.searchParams.get('date') ?? undefined) }
+      : pathname === '/api/sessions' ? { sessions: await getSessionsWithReservations(url.searchParams.get('movieId') ?? undefined, url.searchParams.get('date') ?? undefined) }
       : pathname === '/api/manifest' ? manifest : null;
     res.statusCode = result ? 200 : 404;
     res.end(JSON.stringify(result ?? {error:'Rota não encontrada'}));

@@ -1,12 +1,12 @@
 # Cinema Duca
-- Objetivo: cinema virtual de consulta para GTA7 Lab.
+- Objetivo: cinema virtual de consulta e reservas locais simuladas para GTA7 Lab.
 - Stack: Node 22+, TypeScript, SDK oficial MCP; interface HTML sem framework.
 - JSON: `movies` (catálogo, incluindo ano e elenco), `rooms` (fileiras/capacidade), `sessions` (filme, sala, data, horário, preço e assentos ocupados).
-- Tools: `search_movies(query?, genre?, actor?, year?)`, `get_sessions(movieId?, date?)`; somente leitura.
-- Arquivos: `src/catalog.ts`, `src/mcp.ts`, `src/server.ts`, `api/index.ts`, `public/index.html`, `data/cinema.json`.
-- Decisões: sem banco, autenticação ou pagamentos; datas fixas de demonstração; MCP HTTP sem sessão.
+- Tools: `search_movies(query?, genre?, actor?, year?)`, `get_sessions(movieId?, date?)`; novas: `get_movie(movieId)`, `get_seat_availability(sessionId)`, `create_reservation(sessionId, seats)`, `cancel_reservation(reservationId, cancellationToken)`.
+- Arquivos: `src/reservations.ts`, `src/catalog.ts`, `src/mcp.ts`, `src/server.ts`, `api/index.ts`, `public/index.html`, `data/cinema.json`.
+- Decisões: sem banco, autenticação ou pagamentos; datas fixas de demonstração; MCP HTTP sem sessão. Reservas em `.local/reservations.json` (ou CINEMA_RESERVATIONS_FILE), com bloqueio e gravação atômica; só hash do token de cancelamento é persistido. Usuário escolheu manter JSON local, sem Upstash. Vercel: consultas funcionam; criar/cancelar devolve STORAGE_NOT_CONFIGURED.
 - Validar: `npm run typecheck` e `npm test`; iniciar com `npm run dev`.
-- Status: primeira versão implementada; integração externa e deploy pendentes.
+- Status: seis tools implementadas; catálogo e MCP publicados na Vercel; integração com Core real não validada.
 - Pendente: importar Top 250 do IMDb; acesso ao site bloqueado pelo proxy (403), domínios salvos no rascunho de rede para aplicação pelo usuário. Catálogo continua fictício.
-- Próxima tarefa: publicar na Vercel e conectar o endpoint MCP ao Core real.
+- Próxima tarefa: conectar o endpoint MCP ao Core real; para demonstração de reservas, usar o servidor local.
 - Trabalhar em etapas pequenas; não adicionar dependências sem necessidade.

@@ -7,6 +7,9 @@ const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, 
 export function searchMovies(query = '', genre = '', actor = '', year?: number) {
   return data.movies.filter(m => normalize(m.title).includes(normalize(query)) && normalize(m.genre).includes(normalize(genre)) && (!actor.trim() || m.cast.some(name => normalize(name).includes(normalize(actor.trim())))) && (year === undefined || m.year === year));
 }
+export function getMovie(movieId: string) {
+  return data.movies.find(movie => movie.id === movieId);
+}
 export function getSessions(movieId?: string, date?: string) {
   return data.sessions.filter(s => (!movieId || s.movieId === movieId) && (!date || s.date === date)).map(s => {
     const room = data.rooms.find(r => r.id === s.roomId)!;
@@ -14,4 +17,4 @@ export function getSessions(movieId?: string, date?: string) {
       availableSeats: room.rows.flatMap(row => Array.from({length: room.seatsPerRow}, (_, i) => `${row}${i+1}`)).filter(seat => !s.occupiedSeats.includes(seat)) };
   });
 }
-export const manifest = { id: 'cinema-duca', name: 'Cinema Duca', description: 'Cinema virtual da GTA7 Lab. Catálogo e sessões fictícias de demonstração.', capabilities: ['Consultar filmes', 'Consultar sessões, preços e assentos disponíveis'], tools: ['search_movies', 'get_sessions'], mcp: { endpoint: '/api/mcp', transport: 'streamable-http', authentication: 'none' }, version: '0.1.0' };
+export const manifest = { id: 'cinema-duca', name: 'Cinema Duca', description: 'Cinema virtual da GTA7 Lab. Catálogo e sessões fictícias de demonstração.', capabilities: ['Consultar filmes', 'Consultar sessões, preços e assentos disponíveis', 'Consultar detalhes de filmes', 'Criar e cancelar reservas simuladas (requer armazenamento)'], tools: ['search_movies', 'get_sessions', 'get_movie', 'get_seat_availability', 'create_reservation', 'cancel_reservation'], mcp: { endpoint: '/api/mcp', transport: 'streamable-http', authentication: 'none' }, version: '0.1.0' };
