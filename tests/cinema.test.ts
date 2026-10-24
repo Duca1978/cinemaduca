@@ -1,3 +1,5 @@
+import { createServer } from 'node:http';
+import handler from '../api/index.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -50,4 +52,33 @@ test('HTTP e cliente MCP: inicialização, descoberta e execução das ferrament
     assert.equal((sessionsResult.structuredContent as {sessions:{availableSeats:string[]}[]}).sessions[0].availableSeats.length,21);
     const invalid=await client.callTool({name:'get_sessions',arguments:{date:'invalid'}});assert.equal(invalid.isError,true);
   } finally {await client.close();process.kill();}
+});
+
+test('rotas e MCP preservados após rewrite da Vercel', async () => {
+  const server = createServer((req, res) => {
+    const url = new URL(req.url!, 'http://localhost');
+    url.searchParams.set('route', url.pathname.slice('/api/'.length));
+    req.url = '/api?' + url.searchParams;
+    void handler(req, res);
+  });
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address() as { port: number };
+  const base = `http://127.0.0.1:${address.port}`;
+  const client = new Client({name:'vercel-rewrite-test',version:'1.0.0'});
+  try {
+    const all = await (await fetch(base+'/api/movies')).json();
+    assert.equal(all.movies.length, 3);
+    const filtered = await (await fetch(base+'/api/movies?actor=caio&year=2026')).json();
+    assert.equal(filtered.movies[0].id, 'orbita');
+    const sessions = await (await fetch(base+'/api/sessions')).json();
+    assert.equal(sessions.sessions.length, 3);
+    assert.equal((await (await fetch(base+'/api/manifest')).json()).id, 'cinema-duca');
+    await client.connect(new StreamableHTTPClientTransport(new URL(base+'/api/mcp')));
+    assert.equal((await client.listTools()).tools.length, 2);
+    const result = await client.callTool({name:'search_movies', arguments:{actor:'Caio'}});
+    assert.equal((result.structuredContent as {movies:{id:string}[]}).movies[0].id, 'orbita');
+  } finally {
+    await client.close();
+    await new Promise<void>((resolve,reject) => server.close(error => error ? reject(error) : resolve()));
+  }
 });
