@@ -5,6 +5,7 @@ const portraits = new Map(['orbita', 'bairro', 'mar'].map(id => [`/images/${id}-
 const html = readFileSync(new URL('../public/index.html', import.meta.url));
 createServer((req, res) => {
   if (req.url === '/' || req.url === '/index.html') { res.setHeader('Content-Type','text/html; charset=utf-8'); res.end(html); }
+  else if (req.url === '/app.js') {res.setHeader('Content-Type', 'text/javascript; charset=utf-8');res.end(readFileSync(new URL('../public/app.js', import.meta.url)));}
   else if (portraits.has(new URL(req.url ?? '/', 'http://localhost').pathname)) {
     res.setHeader('Content-Type', 'image/png');
     res.end(readFileSync(portraits.get(new URL(req.url!, 'http://localhost').pathname)!));

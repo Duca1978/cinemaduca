@@ -4,9 +4,10 @@
 - JSON: `movies` (catálogo, incluindo ano, elenco e protagonist (nome, imageUrl, imageAlt, fictional, generatedByAI)), `rooms` (fileiras/capacidade), `sessions` (filme, sala, data, horário, preço e assentos ocupados).
 - Tools: `search_movies(query?, genre?, actor?, year?)`, `get_sessions(movieId?, date?)`; novas: `get_movie(movieId)`, `get_seat_availability(sessionId)`, `create_reservation(sessionId, seats)`, `cancel_reservation(reservationId, cancellationToken)`.
 - Imagens: retratos de protagonistas fictícias gerados por IA em `public/images/`; URL relativa à origem MCP, retornada em get_movie e search_movies.
-- Arquivos: `src/reservations.ts`, `src/catalog.ts`, `src/mcp.ts`, `src/server.ts`, `api/index.ts`, `public/index.html`, `data/cinema.json`.
+- Arquivos: `src/reservations.ts`, `src/catalog.ts`, `src/mcp.ts`, `src/server.ts`, `api/index.ts`, `public/index.html`, `public/app.js`, `data/cinema.json`.
 - Decisões: sem banco, autenticação ou pagamentos; datas fixas de demonstração; MCP HTTP sem sessão. Reservas em `.local/reservations.json` (ou CINEMA_RESERVATIONS_FILE), com bloqueio e gravação atômica; só hash do token de cancelamento é persistido. Usuário escolheu manter JSON local, sem Upstash. Vercel: consultas funcionam; criar/cancelar devolve STORAGE_NOT_CONFIGURED.
 - Validar: `npm run typecheck` e `npm test`; iniciar com `npm run dev`.
+- Interface: botões por sessão para reservar assentos e cancelar; comprovantes em localStorage. POST /api/reservations e /api/reservations/cancel usam as mesmas funções MCP. Na Vercel os botões ficam desativados.
 - Status: seis tools implementadas; catálogo e MCP publicados na Vercel; integração com Core real não validada.
 - Pendente: importar Top 250 do IMDb; acesso ao site bloqueado pelo proxy (403), domínios salvos no rascunho de rede para aplicação pelo usuário. Catálogo continua fictício.
 - Próxima tarefa: conectar o endpoint MCP ao Core real; para demonstração de reservas, usar o servidor local.
